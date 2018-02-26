@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>x_199368_cp.api</api_name>
+        <client_callable>true</client_callable>
+        <description/>
+        <name>api</name>
+        <script><![CDATA[var api = Class.create();
+api.prototype = {
+	initialize: function() {
+		this.key_id = gs.getProperty('x_195840_cp.key_id');
+		this.secret_key = gs.getProperty('x_195840_cp.secret_key');
+		this.api_host = gs.getProperty('x_195840_cp.api_host') ;
+		this.oauth_url = "oauth/access_token?grant_type=client_credentials";
+		this.token = this.requestToken();
+		this.refresh = false;
+	},
+	
+	requestToken: function() {
+		try {
+			var authorizationBasic = gs.base64Encode(this.key_id + ':' + this.secret_key);
+			request = new sn_ws.RESTMessageV2();
+			request.setEndpoint(this.api_host + this.oauth_url);
+			request.setHttpMethod("post");
+			request.setRequestHeader("Content","application/json");
+			request.setRequestHeader("Authorization", "Basic "+ authorizationBasic);
+			request.setRequestBody("grant_type=client_credentials");
+
+			response = request.execute();
+
+			var body = response.getBody();
+			var data = JSON.parse(body);
+
+			if ("error" in data) {
+				throw "Invalid credentials, please check your api key pair";
+			} else {
+				return data['access_token'];
+			} 
+		}
+		
+		catch (ex) {
+			var message = ex.getMessage();
+		}
+	},
+		
+	get: function(endpoint) {
+		var request = new sn_ws.RESTMessageV2();
+		request.setHttpMethod('get');
+		request.setRequestHeader("Accept","Application/json");
+		request.setRequestHeader("Authorization", "Bearer " + this.token);
+		request.setEndpoint(this.api_host + endpoint);
+
+		var response = request.execute();
+
+		var body = response.getBody();
+		var data = JSON.parse(body);
+
+		if ("error" in data) {
+			this.token = this.requestToken();
+			request.setRequestHeader("Authorization", "Bearer " + this.token);
+			response = request.execute();
+			body = response.getBody();
+			data = JSON.parse(body);
+			return data;
+		} else {
+			return data;
+		} 
+	},
+	type: 'api'
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2018-02-26 01:10:18</sys_created_on>
+        <sys_id>9c22b4c54f20130074e201bda310c79b</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>api</sys_name>
+        <sys_package display_value="CloudPassage" source="x_199368_cp">4c1234014f20130074e201bda310c775</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="CloudPassage">4c1234014f20130074e201bda310c775</sys_scope>
+        <sys_update_name>sys_script_include_9c22b4c54f20130074e201bda310c79b</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2018-02-26 01:10:18</sys_updated_on>
+    </sys_script_include>
+</record_update>

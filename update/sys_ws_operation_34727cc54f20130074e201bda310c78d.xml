@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_ws_operation">
+    <sys_ws_operation action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <consumes>application/json,application/xml,text/xml</consumes>
+        <consumes_customized>false</consumes_customized>
+        <default_operation_uri/>
+        <enforce_acl>cf9d01d3e73003009d6247e603f6a990</enforce_acl>
+        <http_method>GET</http_method>
+        <name>app</name>
+        <operation_script><![CDATA[(function process(/*RESTAPIRequest*/ request, /*RESTAPIResponse*/ response) {
+	function deduplicate(events, event_id) {
+		if (events.length > 0) {
+			if (events[0]['id'] === event_id) events.shift();
+		}
+	}
+	
+	function determine_urgency(cves) {
+		var max_cvss = Math.max.apply(Math, cves.map(function(o){return o.CVSS;}));
+		var critical = gs.getProperty('x_195840_cp.critical_cvss');
+		var high = gs.getProperty('x_195840_cp.high_cvss');
+		
+		if (max_cvss >= critical) {
+			return 1; //critical
+		} else if (max_cvss >= high) {
+			return 2; //high
+		} else {
+			return 3; //low
+		}
+	}
+	
+	function check_existence(tags) {
+		var rec = new GlideRecord('incident') ;
+		rec.addQuery('short_description', tags);
+		rec.query();
+		
+		while (rec.next()) {
+			if (rec.number) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+	}
+	
+	function event_vuln(event) {
+		return event['package_name'];
+	}
+	
+	function parsePackage(data) {
+		var found = data.match(new RegExp("Vulnerable package: " + "(.*)\.[A-Z]"));
+		gs.info('in parsePackage found is ' + found[1]);
+		return found[1];
+	}
+	
+	function create_ticket(event) {
+		var tags = event['server_id'] + ',' + event_vuln(event);
+		var exists = check_existence(tags);
+		if (!exists) {
+			var rec = new GlideRecord('incident');		
+			rec.initialize();
+			rec.short_description = tags;
+			rec.description = event['message'];
+			rec.urgency = determine_urgency(event['cves']);
+			rec.insert();
+		} else {
+			gs.info('Ticket already exists');
+		}
+	}
+	
+	function update_ticket(event) {
+		if (event['actor_key_label'] == 'system' && event['message'].includes("SVA")) {
+			var tags = event['server_id'] + ',' + parsePackage(event['message']);
+			var rec = new GlideRecord('incident');
+			var user_id = gs.getUserID();
+			
+			rec.addQuery('short_description', tags);
+			rec.query(); 
+			
+			while(rec.next()) { 
+				gs.info("Resolved " + rec.number);
+				rec.state = 6;
+				rec.caller_id = user_id;
+				rec.close_notes = "Resolved by API";			
+				gs.info('Active incident ' + rec.number + 'resolved');
+				rec.update(); 
+			}
+		} else {
+			return 'Issue is not resolved by system';
+		}
+	}
+	
+	function streamEvents() {
+		var cp_api = new api();
+		var i = 0;
+		var created_at = gs.getProperty('x_195840_cp.start_date');
+		var last_event_id = null;
+		while (i < 1) {
+			i++;
+			var data = cp_api.get("v1/events?type=vulnerable_software_package_found,issue_resolved&per_page=100&sort_by=created_at.asc&since=".concat(created_at));
+			var events = data['events'];
+
+			deduplicate(events, last_event_id);
+			if (events.length > 0) {
+				last_event_id = events[events.length - 1]['id'];
+				created_at = events[events.length - 1]['created_at'];
+			}
+			
+			gs.setProperty('x_195840_cp.start_date', created_at);
+			process_events(events);
+		}
+	}
+	
+	function process_events(events) {
+		for(e = 0; e < events.length; e++) {
+			if (events[e]['type'] == 'vulnerable_software_package_found') {
+				create_ticket(events[e]);
+			} else {
+				update_ticket(events[e]);
+			}
+		}
+	}
+	
+	streamEvents();
+
+})(request, response);]]></operation_script>
+        <operation_uri>/api/x_199368_cp/main</operation_uri>
+        <produces>application/json,application/xml,text/xml</produces>
+        <produces_customized>false</produces_customized>
+        <relative_path>/</relative_path>
+        <request_example/>
+        <requires_acl_authorization>true</requires_acl_authorization>
+        <requires_authentication>true</requires_authentication>
+        <short_description/>
+        <sys_class_name>sys_ws_operation</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2018-02-26 01:11:31</sys_created_on>
+        <sys_id>34727cc54f20130074e201bda310c78d</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_name>app</sys_name>
+        <sys_package display_value="CloudPassage" source="x_199368_cp">4c1234014f20130074e201bda310c775</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="CloudPassage">4c1234014f20130074e201bda310c775</sys_scope>
+        <sys_update_name>sys_ws_operation_34727cc54f20130074e201bda310c78d</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2018-02-26 01:11:37</sys_updated_on>
+        <web_service_definition display_value="main">25623cc54f20130074e201bda310c78f</web_service_definition>
+        <web_service_version/>
+    </sys_ws_operation>
+</record_update>

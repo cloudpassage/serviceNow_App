@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_properties">
+    <sys_properties action="INSERT_OR_UPDATE">
+        <choices/>
+        <description>CloudPassage Halo API secret key</description>
+        <ignore_cache>false</ignore_cache>
+        <is_private>false</is_private>
+        <name>x_199368_cp.secret_key</name>
+        <read_roles/>
+        <suffix>secret_key</suffix>
+        <sys_class_name>sys_properties</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2018-02-26 01:14:33</sys_created_on>
+        <sys_id>0943bc094f20130074e201bda310c76a</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>x_199368_cp.secret_key</sys_name>
+        <sys_package display_value="CloudPassage" source="x_199368_cp">4c1234014f20130074e201bda310c775</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="CloudPassage">4c1234014f20130074e201bda310c775</sys_scope>
+        <sys_update_name>sys_properties_0943bc094f20130074e201bda310c76a</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2018-02-26 01:14:33</sys_updated_on>
+        <type>password</type>
+        <value/>
+        <write_roles/>
+    </sys_properties>
+    <sys_translated_text action="delete_multiple" query="documentkey=0943bc094f20130074e201bda310c76a"/>
+</record_update>
