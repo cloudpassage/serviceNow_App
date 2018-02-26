@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <record_update table="sysauto_script">
     <sysauto_script action="INSERT_OR_UPDATE">
-        <active>false</active>
+        <active>true</active>
         <condition/>
         <conditional>false</conditional>
         <name>Run CP app</name>
@@ -21,8 +21,8 @@
 	
 function determine_urgency(cves) {
 	var max_cvss = Math.max.apply(Math, cves.map(function(o){return o.CVSS;}));
-	var critical = gs.getProperty('x_195840_cp.critical_cvss');
-	var high = gs.getProperty('x_195840_cp.high_cvss');
+	var critical = gs.getProperty('x_199368_cp.critical_cvss');
+	var high = gs.getProperty('x_199368_cp.high_cvss');
 
 	if (max_cvss >= critical) {
 		return 1; //critical
@@ -97,7 +97,7 @@ function update_ticket(event) {
 function streamEvents() {
 	var cp_api = new api();
 	var i = 0;
-	var created_at = gs.getProperty('x_195840_cp.start_date');
+	var created_at = gs.getProperty('x_199368_cp.start_date');
 	var last_event_id = null;
 	while (i < 1) {
 		i++;
@@ -110,7 +110,7 @@ function streamEvents() {
 			created_at = events[events.length - 1]['created_at'];
 		}
 	
-		gs.setProperty('x_195840_cp.start_date', created_at);
+		gs.setProperty('x_199368_cp.start_date', created_at);
 		process_events(events);
 	}
 }
@@ -131,14 +131,14 @@ streamEvents();
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2018-02-26 01:18:26</sys_created_on>
         <sys_id>09f3b8494f20130074e201bda310c707</sys_id>
-        <sys_mod_count>0</sys_mod_count>
+        <sys_mod_count>2</sys_mod_count>
         <sys_name>Run CP app</sys_name>
         <sys_package display_value="CloudPassage" source="x_199368_cp">4c1234014f20130074e201bda310c775</sys_package>
         <sys_policy/>
         <sys_scope display_value="CloudPassage">4c1234014f20130074e201bda310c775</sys_scope>
         <sys_update_name>sysauto_script_09f3b8494f20130074e201bda310c707</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2018-02-26 01:18:26</sys_updated_on>
+        <sys_updated_on>2018-02-26 01:29:29</sys_updated_on>
         <upgrade_safe>false</upgrade_safe>
     </sysauto_script>
 </record_update>
