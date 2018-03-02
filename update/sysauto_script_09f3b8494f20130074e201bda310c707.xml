@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <record_update table="sysauto_script">
     <sysauto_script action="INSERT_OR_UPDATE">
-        <active>true</active>
+        <active>false</active>
         <condition/>
         <conditional>false</conditional>
         <name>Run CP app</name>
@@ -53,12 +53,14 @@ function event_vuln(event) {
 	
 function parsePackage(data) {
 	var found = data.match(new RegExp("Vulnerable package: " + "(.*)\.[A-Z]"));
-	gs.info('in parsePackage found is ' + found[1]);
 	return found[1];
 }
 	
 function create_ticket(event) {
-	var tags = event['server_id'] + ',' + event_vuln(event);
+	var tags = "host = " + event['server_hostname'] + ',' + 
+		"ip address = " + event['server_ip_address'] + ',' +
+		"uuid = " + event['server_id'] + ',' + 
+		event_vuln(event);
 	var exists = check_existence(tags);
 	if (!exists) {
 		var rec = new GlideRecord('incident');		
@@ -74,7 +76,10 @@ function create_ticket(event) {
 	
 function update_ticket(event) {
 	if (event['actor_key_label'] == 'system' && event['message'].includes("SVA")) {
-		var tags = event['server_id'] + ',' + parsePackage(event['message']);
+		var tags =  "host = " + event['server_hostname'] + ',' + 
+			"ip address = " + event['server_ip_address'] + ',' +
+			"uuid = " + event['server_id'] + ',' +
+			parsePackage(event['message']);
 		var rec = new GlideRecord('incident');
 		var user_id = gs.getUserID();
 
@@ -93,26 +98,29 @@ function update_ticket(event) {
 		return 'Issue is not resolved by system';
 	}
 }
+
+function getLatestEventTime(api) {
+	var data = api.get("v1/events?type=vulnerable_software_package_found,issue_resolved&per_page=100&sort_by=created_at.desc");
+	var latest_time = data['events'][0]['created_at'];
+	return latest_time;
+}
 	
 function streamEvents() {
 	var cp_api = new api();
-	var i = 0;
 	var created_at = gs.getProperty('x_199368_cp.start_date');
+	if (!created_at) created_at = getLatestEventTime(cp_api);
 	var last_event_id = null;
-	while (i < 1) {
-		i++;
-		var data = cp_api.get("v1/events?type=vulnerable_software_package_found,issue_resolved&per_page=100&sort_by=created_at.asc&since=".concat(created_at));
-		var events = data['events'];
+	var data = cp_api.get("v1/events?type=vulnerable_software_package_found,issue_resolved&per_page=100&sort_by=created_at.asc&since=".concat(created_at));
+	var events = data['events'];
 
-		deduplicate(events, last_event_id);
-		if (events.length > 0) {
-			last_event_id = events[events.length - 1]['id'];
-			created_at = events[events.length - 1]['created_at'];
-		}
-	
-		gs.setProperty('x_199368_cp.start_date', created_at);
-		process_events(events);
+	deduplicate(events, last_event_id);
+	if (events.length > 0) {
+		last_event_id = events[events.length - 1]['id'];
+		created_at = events[events.length - 1]['created_at'];
 	}
+
+	gs.setProperty('x_199368_cp.start_date', created_at);
+	process_events(events);
 }
 	
 function process_events(events) {
@@ -131,14 +139,14 @@ streamEvents();
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2018-02-26 01:18:26</sys_created_on>
         <sys_id>09f3b8494f20130074e201bda310c707</sys_id>
-        <sys_mod_count>2</sys_mod_count>
+        <sys_mod_count>6</sys_mod_count>
         <sys_name>Run CP app</sys_name>
         <sys_package display_value="CloudPassage" source="x_199368_cp">4c1234014f20130074e201bda310c775</sys_package>
         <sys_policy/>
         <sys_scope display_value="CloudPassage">4c1234014f20130074e201bda310c775</sys_scope>
         <sys_update_name>sysauto_script_09f3b8494f20130074e201bda310c707</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2018-02-26 01:29:29</sys_updated_on>
+        <sys_updated_on>2018-03-02 04:36:20</sys_updated_on>
         <upgrade_safe>false</upgrade_safe>
     </sysauto_script>
 </record_update>
