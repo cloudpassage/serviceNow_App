@@ -43,8 +43,13 @@
 		}
 	}
 
-	function event_vuln(event) {
-		return event['package_name'];
+	function makeTag(event, package_name) {
+		var tags = "host = " + event['server_hostname'] + ', ' + 
+			"ip address = " + event['server_ip_address'] + ', ' +
+			"uuid = " + event['server_id'] + ', ' + 
+			"package = " + package_name;
+
+		return tags;
 	}
 
 	function parsePackage(data) {
@@ -53,11 +58,9 @@
 	}
 
 	function create_ticket(event) {
-		var tags = "host = " + event['server_hostname'] + ',' + 
-			"ip address = " + event['server_ip_address'] + ',' +
-			"uuid = " + event['server_id'] + ',' + 
-			event_vuln(event);
+		var tags = makeTag(event, event['package_name']);
 		var exists = check_existence(tags);
+
 		if (!exists) {
 			var rec = new GlideRecord('incident');		
 			rec.initialize();
@@ -72,10 +75,7 @@
 
 	function update_ticket(event) {
 		if (event['actor_key_label'] == 'system' && event['message'].includes("SVA")) {
-			var tags =  "host = " + event['server_hostname'] + ',' + 
-				"ip address = " + event['server_ip_address'] + ',' +
-				"uuid = " + event['server_id'] + ',' +
-				parsePackage(event['message']);
+			var tags = makeTag(event, parsePackage(event['message']));
 			var rec = new GlideRecord('incident');
 			var user_id = gs.getUserID();
 
@@ -143,14 +143,14 @@
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2018-02-26 01:11:31</sys_created_on>
         <sys_id>34727cc54f20130074e201bda310c78d</sys_id>
-        <sys_mod_count>3</sys_mod_count>
+        <sys_mod_count>4</sys_mod_count>
         <sys_name>app</sys_name>
         <sys_package display_value="CloudPassage" source="x_199368_cp">4c1234014f20130074e201bda310c775</sys_package>
         <sys_policy/>
         <sys_scope display_value="CloudPassage">4c1234014f20130074e201bda310c775</sys_scope>
         <sys_update_name>sys_ws_operation_34727cc54f20130074e201bda310c78d</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2018-03-02 04:30:01</sys_updated_on>
+        <sys_updated_on>2018-03-02 17:07:27</sys_updated_on>
         <web_service_definition display_value="main">25623cc54f20130074e201bda310c78f</web_service_definition>
         <web_service_version/>
     </sys_ws_operation>

@@ -47,8 +47,13 @@ function check_existence(tags) {
 	}
 }
 	
-function event_vuln(event) {
-	return event['package_name'];
+function makeTag(event, package_name) {
+	var tags = "host = " + event['server_hostname'] + ', ' + 
+		"ip address = " + event['server_ip_address'] + ', ' +
+		"uuid = " + event['server_id'] + ', ' + 
+		"package = " + package_name;
+	
+	return tags;
 }
 	
 function parsePackage(data) {
@@ -57,11 +62,9 @@ function parsePackage(data) {
 }
 	
 function create_ticket(event) {
-	var tags = "host = " + event['server_hostname'] + ',' + 
-		"ip address = " + event['server_ip_address'] + ',' +
-		"uuid = " + event['server_id'] + ',' + 
-		event_vuln(event);
+	var tags = makeTag(event, event['package_name']);
 	var exists = check_existence(tags);
+	
 	if (!exists) {
 		var rec = new GlideRecord('incident');		
 		rec.initialize();
@@ -76,10 +79,7 @@ function create_ticket(event) {
 	
 function update_ticket(event) {
 	if (event['actor_key_label'] == 'system' && event['message'].includes("SVA")) {
-		var tags =  "host = " + event['server_hostname'] + ',' + 
-			"ip address = " + event['server_ip_address'] + ',' +
-			"uuid = " + event['server_id'] + ',' +
-			parsePackage(event['message']);
+		var tags = makeTag(event, parsePackage(event['message']));
 		var rec = new GlideRecord('incident');
 		var user_id = gs.getUserID();
 
@@ -139,14 +139,14 @@ streamEvents();
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2018-02-26 01:18:26</sys_created_on>
         <sys_id>09f3b8494f20130074e201bda310c707</sys_id>
-        <sys_mod_count>6</sys_mod_count>
+        <sys_mod_count>15</sys_mod_count>
         <sys_name>Run CP app</sys_name>
         <sys_package display_value="CloudPassage" source="x_199368_cp">4c1234014f20130074e201bda310c775</sys_package>
         <sys_policy/>
         <sys_scope display_value="CloudPassage">4c1234014f20130074e201bda310c775</sys_scope>
         <sys_update_name>sysauto_script_09f3b8494f20130074e201bda310c707</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2018-03-02 04:36:20</sys_updated_on>
+        <sys_updated_on>2018-03-02 17:06:10</sys_updated_on>
         <upgrade_safe>false</upgrade_safe>
     </sysauto_script>
 </record_update>
